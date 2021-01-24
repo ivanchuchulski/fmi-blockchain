@@ -3,48 +3,75 @@ pragma solidity >=0.6.6 <0.8.0;
 
 import "./Cause.sol";
 
-// 0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF
 contract ChainFund {
     uint256 private numCauses;
-    mapping(uint256 => Cause) private causes;
+    mapping(string => Cause) private causes;
+    string[] private registeredCauses;
 
     constructor() {
         numCauses = 0;
     }
 
-    function addCause(address payable beneficiary, uint256 goal) public returns (uint256 campaignID) {
-        // Creates new struct in memory and copies it to storage.
-        // We leave out the mapping type, because it is not valid in memory.
-        // If structs are copied (even from storage to storage), mapping types
-        // are always omitted, because they cannot be enumerated.
+    function addCause(address payable beneficiary, uint256 goal, string memory description) public {
+        require(!isCauseRegistered(description), "error : cause already registered");
 
-        // campaignID is return variable
-        campaignID = numCauses++;
-        causes[campaignID] = Cause(beneficiary, goal, 0, false);
+        registeredCauses.push(description);
+        causes[description] = Cause(description, beneficiary, goal, 0);
     }
 
-    function donateToCause(uint256 causeID) public payable {
-        uint256 donationAmount = msg.value;
+    function donateToCause(string memory description) public payable {
+        require(isCauseRegistered(description), "error : not such cause registered");
 
-        Cause storage cause = causes[causeID];
+        Cause storage cause = causes[description];
+        address sender = msg.sender;
+        uint256 value = msg.value;
 
-        cause.currentAmount += donationAmount;
+        cause.currentAmount += value;
 
-        checkGoalReached(causeID);
+        if (checkGoalReached(cause)) {
+            transferCauseDonations(cause);
+            // TODO : remove cause from registered causes
+        }
     }
 
-    function checkGoalReached(uint causeID) public returns (bool reached) {
-        Cause storage cause = causes[causeID];
+    function isCauseGoalReached(string memory description) public view returns (bool reached) {
+        require(isCauseRegistered(description), "error : not such cause registered");
 
-        if (cause.currentAmount < cause.goal) {
-            return false;
+        Cause storage cause = causes[description];
+
+        return cause.currentAmount >= cause.goal;
+    }
+
+    function checkCauseProgress(string memory description) public view returns (uint) {
+        require(isCauseRegistered(description), "error : not such cause registered");
+
+        Cause storage cause = causes[description];
+
+        return cause.currentAmount;
+    }
+
+
+    function isCauseRegistered(string memory description) private view returns (bool) {
+        for (uint256 i = 0; i < registeredCauses.length; i++) {
+            if (keccak256(abi.encodePacked(registeredCauses[i])) == keccak256(abi.encodePacked(description))) {
+                return true;
+            }
         }
 
+        return false;
+    }
+
+
+    function checkGoalReached(Cause storage cause) private view returns (bool reached) {
+        return cause.currentAmount >= cause.goal;
+    }
+
+    function transferCauseDonations(Cause storage cause) private {
         uint256 amount = cause.currentAmount;
 
-        cause.currentAmount = 0;
         cause.beneficiary.transfer(amount);
-
-        return true;
     }
+
+
+
 }
