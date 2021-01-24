@@ -75,3 +75,20 @@
         -network difficulty - задава се софтуерно например чрез hard fork от създателите на coin-а
         -hash difficulty - изчислява се на базата на изчислителната мощност, която в момента е включена в мрежата
 
+бележки от срещата на 24ти:
+1. create cause with date and target cause money
+2. send money for cause and follow transactions for cause
+/identify user by address/
+( everyone can see all the transactions for cause)
+
+3. integation between metamask and remix in order to get the address of user
+
+4. 2 web pages - view causes, details of cause and transactions 
+
+5. automatically closing cause/data
+
+6. ownership of cause ( 1st transaction maker ) - when closing cause - check if the user who wants to closes it -  is the creator
+
+? extend goal - stretches? - following this in blockchain ( горещо развитие?) 
+
+? donations between similar causes - how?
