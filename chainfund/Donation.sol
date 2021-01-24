@@ -1,7 +1,7 @@
 pragma solidity >=0.6.6 <0.8.0;
 
-struct Donator {
+struct Donation {
     address donator;
     uint256 ammount;
-    // eventually timestamp
+    uint256 timestamp;
 }
