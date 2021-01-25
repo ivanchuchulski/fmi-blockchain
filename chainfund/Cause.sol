@@ -6,4 +6,5 @@ struct Cause {
     address payable beneficiary;
     uint256 goal;
     uint256 currentAmount;
+    uint256 deadlineTimestamp;
 }

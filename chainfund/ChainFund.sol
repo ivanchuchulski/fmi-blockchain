@@ -5,6 +5,7 @@ import "./Cause.sol";
 import "./Donation.sol";
 
 contract ChainFund {
+    uint256 private constant SECONDS_IN_DAY =  24 * 60 * 60;
     string[] private registeredCauses;
     mapping(string => bool) private registeredCausesMap;
 
@@ -17,10 +18,10 @@ contract ChainFund {
     constructor() {
     }
 
-    function addCause(address payable beneficiary, uint256 goal, string memory title) public {
+    function addCause(string memory title, address payable beneficiary, uint256 goal, uint256 deadlineInDays) public {
         require(!isCauseRegistered(title), "error : cause already registered");
 
-        causes[title] = Cause(title, beneficiary, goal, 0);
+        causes[title] = Cause(title, beneficiary, goal, 0, deadlineInDays * SECONDS_IN_DAY + block.timestamp);
         registeredCauses.push(title);
         registeredCausesMap[title] = true;
     }
@@ -35,6 +36,14 @@ contract ChainFund {
         Cause storage cause = causes[title];
         Donation[] storage donatorsForCause = causeDonators[cause.title];
 
+        if (cause.deadlineTimestamp < block.timestamp) {
+            transferCauseDonations(cause);
+
+            finishedCauses.push(cause.title);
+            finishedCausesMap[title] = true;
+            return;
+        }
+
         cause.currentAmount += value;
         donatorsForCause.push(Donation(sender, value, block.timestamp));
 
@@ -43,6 +52,55 @@ contract ChainFund {
 
             finishedCauses.push(cause.title);
             finishedCausesMap[title] = true;
+        }
+    }
+
+    function cancelCause(string memory title) public payable returns (bool) {
+        require(isCauseRegistered(title), "error : not such cause registered");
+        require(!isCauseFinished(title), "error : cause already finished");
+
+        address sender = msg.sender;
+        Cause storage cause = causes[title];
+
+        if (cause.beneficiary == sender) {
+            transferCauseDonations(cause);
+
+            finishedCauses.push(cause.title);
+            finishedCausesMap[title] = true;
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function extendCauseDeadline(string memory title, uint256 daysToExtend) public payable returns (bool) {
+        require(isCauseRegistered(title), "error : not such cause registered");
+        require(!isCauseFinished(title), "error : cause already finished");
+
+        address sender = msg.sender;
+        Cause storage cause = causes[title];
+
+        if (cause.beneficiary == sender) {
+            cause.deadlineTimestamp += daysToExtend * SECONDS_IN_DAY;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function extendCauseGoal(string memory title, uint256 goalExtension) public payable returns (bool) {
+        require(isCauseRegistered(title), "error : not such cause registered");
+        require(!isCauseFinished(title), "error : cause already finished");
+
+        address sender = msg.sender;
+        Cause storage cause = causes[title];
+
+        if (cause.beneficiary == sender) {
+            cause.goal += goalExtension;
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -62,12 +120,45 @@ contract ChainFund {
         return cause.currentAmount;
     }
 
+    function checkCauseGoal(string memory title) public view returns (uint) {
+        require(isCauseRegistered(title), "error : not such cause registered");
+
+        Cause storage cause = causes[title];
+
+        return cause.goal;
+    }
+
+    function getCauseDeadline(string memory title) public view returns (uint256) {
+        require(isCauseRegistered(title), "error : not such cause registered");
+
+        Cause storage cause = causes[title];
+
+        return cause.deadlineTimestamp;
+    }
+
+    function getCauseDeadlineInDays(string memory title) public view returns (uint256) {
+        require(isCauseRegistered(title), "error : not such cause registered");
+
+        Cause storage cause = causes[title];
+
+        if (cause.deadlineTimestamp < block.timestamp) {
+            return 0;
+        } else {
+            // integer division so it truncates
+            return (cause.deadlineTimestamp - block.timestamp) / SECONDS_IN_DAY;
+        }
+    }
+
     function getNumberOfRegisteredCauses() public view returns (uint256) {
         return registeredCauses.length;
     }
 
     function getNumberOfFinishedCauses() public view returns (uint256) {
         return finishedCauses.length;
+    }
+
+    function getBlockTimeStamp() public view returns (uint256) {
+        return block.timestamp;
     }
 
     function getDonationsForCause(string memory title) public view returns (address[] memory, uint256[] memory, uint256[] memory) {
