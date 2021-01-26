@@ -5,103 +5,92 @@ import "./Cause.sol";
 import "./Donation.sol";
 
 contract ChainFund {
-    uint256 private constant SECONDS_IN_DAY =  24 * 60 * 60;
-    string[] private registeredCauses;
-    mapping(string => bool) private registeredCausesMap;
+    uint256 private constant SECONDS_IN_DAY = 24 * 60 * 60;
 
-    string[] private finishedCauses;
+    uint256 private registeredCausesCount;
+    uint256 private finishedCausesCount;
+
+    mapping(string => bool) private registeredCausesMap;
     mapping(string => bool) private finishedCausesMap;
 
     mapping(string => Cause) private causes;
     mapping(string => Donation[]) private causeDonators;
 
     constructor() {
+        registeredCausesCount = 0;
+        finishedCausesCount = 0;
     }
 
-    function addCause(string memory title, address payable beneficiary, uint256 goal, uint256 deadlineInDays) public {
+    function addCause(string memory title, address creator, address payable beneficiary, uint256 goal, uint256 deadlineInDays) public {
         require(!isCauseRegistered(title), "error : cause already registered");
 
-        causes[title] = Cause(title, beneficiary, goal, 0, deadlineInDays * SECONDS_IN_DAY + block.timestamp);
-        registeredCauses.push(title);
+        causes[title] = Cause(title, creator, beneficiary, goal, 0, deadlineInDays * SECONDS_IN_DAY + block.timestamp);
+        registeredCausesCount++;
         registeredCausesMap[title] = true;
     }
 
+    // maybe add require the donator to not be the cause creator or beneficiary
     function donateToCause(string memory title) public payable {
         require(isCauseRegistered(title), "error : not such cause registered");
         require(!isCauseFinished(title), "error : cause already finished");
 
-        address sender = msg.sender;
-        uint256 value = msg.value;
-
         Cause storage cause = causes[title];
-        Donation[] storage donatorsForCause = causeDonators[cause.title];
 
         if (cause.deadlineTimestamp < block.timestamp) {
             transferCauseDonations(cause);
-
-            finishedCauses.push(cause.title);
-            finishedCausesMap[title] = true;
+            addCauseToFinished(title);
             return;
         }
+
+        address sender = msg.sender;
+        uint256 value = msg.value;
+        Donation[] storage donatorsForCause = causeDonators[cause.title];
 
         cause.currentAmount += value;
         donatorsForCause.push(Donation(sender, value, block.timestamp));
 
         if (checkGoalReached(cause)) {
             transferCauseDonations(cause);
-
-            finishedCauses.push(cause.title);
-            finishedCausesMap[title] = true;
+            addCauseToFinished(title);
         }
     }
 
-    function cancelCause(string memory title) public payable returns (bool) {
+    function stopCause(string memory title) public payable returns (bool) {
         require(isCauseRegistered(title), "error : not such cause registered");
         require(!isCauseFinished(title), "error : cause already finished");
 
-        address sender = msg.sender;
         Cause storage cause = causes[title];
 
-        if (cause.beneficiary == sender) {
-            transferCauseDonations(cause);
+        require(cause.creator == msg.sender, "error : to stop the cause you have to be the cause creator");
 
-            finishedCauses.push(cause.title);
-            finishedCausesMap[title] = true;
+        transferCauseDonations(cause);
+        addCauseToFinished(title);
 
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
 
     function extendCauseDeadline(string memory title, uint256 daysToExtend) public payable returns (bool) {
         require(isCauseRegistered(title), "error : not such cause registered");
         require(!isCauseFinished(title), "error : cause already finished");
 
-        address sender = msg.sender;
         Cause storage cause = causes[title];
 
-        if (cause.beneficiary == sender) {
-            cause.deadlineTimestamp += daysToExtend * SECONDS_IN_DAY;
-            return true;
-        } else {
-            return false;
-        }
+        require(cause.creator == msg.sender, "error : to extend the deadline you have to be the cause creator");
+
+        cause.deadlineTimestamp += daysToExtend * SECONDS_IN_DAY;
+        return true;
     }
 
     function extendCauseGoal(string memory title, uint256 goalExtension) public payable returns (bool) {
         require(isCauseRegistered(title), "error : not such cause registered");
         require(!isCauseFinished(title), "error : cause already finished");
 
-        address sender = msg.sender;
         Cause storage cause = causes[title];
 
-        if (cause.beneficiary == sender) {
-            cause.goal += goalExtension;
-            return true;
-        } else {
-            return false;
-        }
+        require(cause.creator == msg.sender, "error : to extend the goal you have to be the cause creator");
+
+        cause.goal += goalExtension;
+        return true;
     }
 
     function isCauseGoalReached(string memory title) public view returns (bool reached) {
@@ -150,11 +139,11 @@ contract ChainFund {
     }
 
     function getNumberOfRegisteredCauses() public view returns (uint256) {
-        return registeredCauses.length;
+        return registeredCausesCount;
     }
 
     function getNumberOfFinishedCauses() public view returns (uint256) {
-        return finishedCauses.length;
+        return finishedCausesCount;
     }
 
     function getBlockTimeStamp() public view returns (uint256) {
@@ -179,6 +168,7 @@ contract ChainFund {
         return (addresses, donationAmounts, donationTimestamps);
     }
 
+    // private helpers
     function isCauseRegistered(string memory title) private view returns (bool) {
         return registeredCausesMap[title];
     }
@@ -199,5 +189,10 @@ contract ChainFund {
         uint256 amount = cause.currentAmount;
 
         cause.beneficiary.transfer(amount);
+    }
+
+    function addCauseToFinished(string memory title) private {
+        finishedCausesCount++;
+        finishedCausesMap[title] = true;
     }
 }
