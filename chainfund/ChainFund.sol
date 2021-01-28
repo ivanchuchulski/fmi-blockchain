@@ -21,9 +21,10 @@ contract ChainFund {
         finishedCausesCount = 0;
     }
 
-    function addCause(string memory title, address creator, address payable beneficiary, uint256 goal, uint256 deadlineInDays) public {
+    function addCause(string memory title, address payable beneficiary, uint256 goal, uint256 deadlineInDays) public {
         require(!isCauseRegistered(title), "error : cause already registered");
 
+        address creator = msg.sender;
         causes[title] = Cause(title, creator, beneficiary, goal, 0, deadlineInDays * SECONDS_IN_DAY + block.timestamp);
         registeredCausesCount++;
         registeredCausesMap[title] = true;
