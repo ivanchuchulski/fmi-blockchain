@@ -3,6 +3,7 @@ pragma solidity >=0.6.6 <0.8.0;
 
 struct Cause {
     string title;
+    string description;
     address creator;
     address payable beneficiary;
     uint256 goal;

@@ -16,16 +16,18 @@ contract ChainFund {
     mapping(string => Cause) private causes;
     mapping(string => Donation[]) private causeDonators;
 
+    uint256 public constant MAX_ALLOWED_DAY_EXTENSION_OF_CAUSE = 30;
+
     constructor() {
         registeredCausesCount = 0;
         finishedCausesCount = 0;
     }
 
-    function addCause(string memory title, address payable beneficiary, uint256 goal, uint256 deadlineInDays) public {
+    function addCause(string memory title, string memory description, address payable beneficiary, uint256 goal, uint256 deadlineInDays) public {
         require(!isCauseRegistered(title), "error : cause already registered");
 
         address creator = msg.sender;
-        causes[title] = Cause(title, creator, beneficiary, goal, 0, deadlineInDays * SECONDS_IN_DAY + block.timestamp);
+        causes[title] = Cause(title, description, creator, beneficiary, goal, 0, deadlineInDays * SECONDS_IN_DAY + block.timestamp);
         registeredCausesCount++;
         registeredCausesMap[title] = true;
     }
@@ -77,12 +79,14 @@ contract ChainFund {
         Cause storage cause = causes[title];
 
         require(cause.creator == msg.sender, "error : to extend the deadline you have to be the cause creator");
+        require(daysToExtend <= MAX_ALLOWED_DAY_EXTENSION_OF_CAUSE, "error : the maximum allowed extension is 30 days");
 
         cause.deadlineTimestamp += daysToExtend * SECONDS_IN_DAY;
         return true;
     }
 
-    function extendCauseGoal(string memory title, uint256 goalExtension) public payable returns (bool) {
+    // maybe add require for maximum allowed increase
+    function increaseCauseGoal(string memory title, uint256 goalIncrease) public payable returns (bool) {
         require(isCauseRegistered(title), "error : not such cause registered");
         require(!isCauseFinished(title), "error : cause already finished");
 
@@ -90,7 +94,7 @@ contract ChainFund {
 
         require(cause.creator == msg.sender, "error : to extend the goal you have to be the cause creator");
 
-        cause.goal += goalExtension;
+        cause.goal += goalIncrease;
         return true;
     }
 
@@ -102,7 +106,7 @@ contract ChainFund {
         return checkGoalReached(cause);
     }
 
-    function checkCauseProgress(string memory title) public view returns (uint) {
+    function getCauseProgress(string memory title) public view returns (uint) {
         require(isCauseRegistered(title), "error : not such cause registered");
 
         Cause storage cause = causes[title];
@@ -110,7 +114,7 @@ contract ChainFund {
         return cause.currentAmount;
     }
 
-    function checkCauseGoal(string memory title) public view returns (uint) {
+    function getCauseGoal(string memory title) public view returns (uint) {
         require(isCauseRegistered(title), "error : not such cause registered");
 
         Cause storage cause = causes[title];
@@ -118,7 +122,7 @@ contract ChainFund {
         return cause.goal;
     }
 
-    function getCauseDeadline(string memory title) public view returns (uint256) {
+    function getCauseDeadlineInTimestamp(string memory title) public view returns (uint256) {
         require(isCauseRegistered(title), "error : not such cause registered");
 
         Cause storage cause = causes[title];
@@ -126,7 +130,7 @@ contract ChainFund {
         return cause.deadlineTimestamp;
     }
 
-    function getCauseDeadlineInDays(string memory title) public view returns (uint256) {
+    function checkDaysLeftForCause(string memory title) public view returns (uint256) {
         require(isCauseRegistered(title), "error : not such cause registered");
 
         Cause storage cause = causes[title];
@@ -134,21 +138,17 @@ contract ChainFund {
         if (cause.deadlineTimestamp < block.timestamp) {
             return 0;
         } else {
-            // integer division so it truncates
+            // integer division so it truncates, so when it is below 1 day it will show 0
             return (cause.deadlineTimestamp - block.timestamp) / SECONDS_IN_DAY;
         }
     }
 
-    function getNumberOfRegisteredCauses() public view returns (uint256) {
-        return registeredCausesCount;
-    }
+    function getCauseDescription(string memory title) public view returns(string memory) {
+        require(isCauseRegistered(title), "error : not such cause registered");
 
-    function getNumberOfFinishedCauses() public view returns (uint256) {
-        return finishedCausesCount;
-    }
+        Cause storage cause = causes[title];
 
-    function getBlockTimeStamp() public view returns (uint256) {
-        return block.timestamp;
+        return cause.description;
     }
 
     function getDonationsForCause(string memory title) public view returns (address[] memory, uint256[] memory, uint256[] memory) {
@@ -167,6 +167,14 @@ contract ChainFund {
         }
 
         return (addresses, donationAmounts, donationTimestamps);
+    }
+
+    function getNumberOfRegisteredCauses() public view returns (uint256) {
+        return registeredCausesCount;
+    }
+
+    function getNumberOfFinishedCauses() public view returns (uint256) {
+        return finishedCausesCount;
     }
 
     // private helpers
