@@ -16,6 +16,8 @@ contract ChainFund {
     mapping(string => Cause) private causes;
     mapping(string => Donation[]) private causeDonators;
 
+    mapping(string => string[]) private similarCauses;
+
     uint256 public constant MAX_ALLOWED_DAY_EXTENSION_OF_CAUSE = 30;
 
     constructor() {
@@ -72,7 +74,7 @@ contract ChainFund {
         return true;
     }
 
-    function extendCauseDeadline(string memory title, uint256 daysToExtend) public payable returns (bool) {
+    function extendCauseDeadline(string memory title, uint256 daysToExtend) public returns (bool) {
         require(isCauseRegistered(title), "error : not such cause registered");
         require(!isCauseFinished(title), "error : cause already finished");
 
@@ -86,7 +88,7 @@ contract ChainFund {
     }
 
     // maybe add require for maximum allowed increase
-    function increaseCauseGoal(string memory title, uint256 goalIncrease) public payable returns (bool) {
+    function increaseCauseGoal(string memory title, uint256 goalIncrease) public returns (bool) {
         require(isCauseRegistered(title), "error : not such cause registered");
         require(!isCauseFinished(title), "error : cause already finished");
 
@@ -97,6 +99,22 @@ contract ChainFund {
         cause.goal += goalIncrease;
         return true;
     }
+
+    function addSimilarCause(string memory title, string memory similarCauseTitle) public {
+        require(isCauseRegistered(title), "error : cause - not such cause registered");
+        require(isCauseRegistered(similarCauseTitle), "error : similar cause - not such cause registered");
+
+        string[] storage similarCausesForCause = similarCauses[title];
+
+        similarCausesForCause.push(similarCauseTitle);
+    }
+
+    // return of reference type is not supported, have to use the experimental feature
+    // function getSimilarCauses(string memory title) public returns (string[] memory) {
+    //     require(isCauseRegistered(title), "error : cause - not such cause registered");
+
+    //     return similarCauses[title];
+    // }
 
     function isCauseGoalReached(string memory title) public view returns (bool reached) {
         require(isCauseRegistered(title), "error : not such cause registered");
