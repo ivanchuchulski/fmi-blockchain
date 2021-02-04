@@ -1,0 +1,29 @@
+.Car {
+  margin: 50px;
+}
+
+.btn {
+  margin-right: 10px;
+  height: 30px;
+  text-decoration: none;
+  border-radius: 5px;
+  border-style: initial;
+  color: black;
+  height: 2%;
+  margin-top: 10px;
+  background-color: transparent;
+}
+
+.link {
+  font-size: 14px;
+  color: black;
+}
+
+.carImg {
+  height: 300px;
+  width: 500px;
+}
+
+.carInfo {
+  text-align: center;
+}

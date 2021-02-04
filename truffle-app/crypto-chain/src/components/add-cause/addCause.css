@@ -1,0 +1,17 @@
+#causeForm {
+  text-align: center;
+}
+
+.input {
+  text-align: center;
+  background: transparent;
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  width: 500px;
+  margin-bottom: 20px;
+}
+
+#title {
+  text-align: center;
+}
