@@ -1,1 +1,3 @@
 /node_modules
+truffle-app/node_modules/
+truffle-app/crypto-chain/.eslintcache

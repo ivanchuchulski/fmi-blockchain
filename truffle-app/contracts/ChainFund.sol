@@ -13,7 +13,7 @@ contract ChainFund {
     mapping(string => bool) private registeredCausesMap;
     mapping(string => bool) private finishedCausesMap;
 
-    mapping(string => Cause) private causes;
+    mapping(string => Cause) public causes;
     mapping(string => Donation[]) private causeDonators;
 
     mapping(string => string[]) private similarCauses;
