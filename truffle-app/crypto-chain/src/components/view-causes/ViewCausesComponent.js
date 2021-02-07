@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import Cause from "../cause/Cause";
-import causeService from "../../services/cause.service";
+import causeService from "../../services/causeService";
 
 class ViewCausesComponent extends Component {
   constructor() {
