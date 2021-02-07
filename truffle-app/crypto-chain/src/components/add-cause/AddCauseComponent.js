@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import causeService from "../../services/cause.service";
+import causeService from "../../services/causeService";
 import { Link } from "react-router-dom";
 import "./addCause.css";
 
