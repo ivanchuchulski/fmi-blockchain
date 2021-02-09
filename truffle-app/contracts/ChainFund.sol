@@ -2,7 +2,7 @@
 pragma solidity >=0.6.6 <0.8.0;
 
 import "./Cause.sol";
-import "./Donation.sol";
+import "./Donator.sol";
 
 contract ChainFund {
     uint256 private constant SECONDS_IN_DAY = 24 * 60 * 60;
@@ -13,14 +13,14 @@ contract ChainFund {
     mapping(string => bool) private registeredCausesMap;
     mapping(string => bool) private finishedCausesMap;
 
-    mapping(string => Cause) private causes;
+    mapping(string => Cause) public causes;
     mapping(string => Donation[]) private causeDonators;
 
     mapping(string => string[]) private similarCauses;
 
     uint256 public constant MAX_ALLOWED_DAY_EXTENSION_OF_CAUSE = 30;
 
-    constructor() {
+    constructor () public {
         registeredCausesCount = 0;
         finishedCausesCount = 0;
     }
