@@ -1,0 +1,16 @@
+{
+  "causes": [
+    {
+      "id": 1,
+      "title": "Children in need for science",
+      "description": "Children in Indonesia need...",
+      "img": "https://www.unicef.org/indonesia/sites/unicef.org.indonesia/files/styles/hero_mobile/public/IDN-Education-Hero.jpg?itok=eMzVHMIc"
+    },
+    {
+      "id": 2,
+      "title": "Animal rescue",
+      "description": "Animals needing food and love...",
+      "img": "https://i1.sndcdn.com/artworks-000421555080-up93x9-t500x500.jpg"
+    }
+  ]
+}

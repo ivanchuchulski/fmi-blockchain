@@ -25,7 +25,7 @@ class Cause extends Component {
           <div className="card h-100">
             <div className="card-body">
               <div className="img">
-                <img className="causeImg" src="TODO - test-img"></img>
+                <img className="causeImg" src={this.props.cause.img}></img>
               </div>
               <div className="causeInfo">
                 {this.props.cause.title},{this.props.cause.description}

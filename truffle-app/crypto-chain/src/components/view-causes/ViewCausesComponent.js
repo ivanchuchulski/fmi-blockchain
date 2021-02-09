@@ -19,12 +19,13 @@ class ViewCausesComponent extends Component {
   componentDidUpdate() {}
 
   retrieveCauses() {
-    causeService.retrieveCauses();
-    //   .then((res) => res.json()) //TODO - consider how
-    //   .then((json) => this.setState({ causes: json.causes })) //TODO - consider how
-    //   .catch((err) => {
-    // console.log("err is " + err.message);
-    //   });
+    causeService
+      .retrieveCauses()
+      //   .then((res) => res.json()) //TODO - consider how
+      .then((json) => this.setState({ causes: json.causes })) //TODO - consider how
+      .catch((err) => {
+        console.log("err is " + err.message);
+      });
   }
 
   render() {
