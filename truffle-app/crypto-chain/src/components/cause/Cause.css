@@ -1,4 +1,4 @@
-.Car {
+.Cause {
   margin: 50px;
 }
 
@@ -10,8 +10,13 @@
   border-style: initial;
   color: black;
   height: 2%;
-  margin-top: 10px;
+  margin-top: -8px;
   background-color: transparent;
+}
+
+.button {
+  background: transparent;
+  border-style: none;
 }
 
 .link {
@@ -19,11 +24,11 @@
   color: black;
 }
 
-.carImg {
-  height: 300px;
+.causeImg {
+  height: 400px;
   width: 500px;
 }
 
-.carInfo {
+.causeInfo {
   text-align: center;
 }
